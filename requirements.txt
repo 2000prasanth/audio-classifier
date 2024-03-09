@@ -3,3 +3,7 @@ numpy
 pandas
 pydeck
 streamlit
+joblib
+pickle
+librosa
+tensorflow

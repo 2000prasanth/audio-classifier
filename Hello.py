@@ -1,51 +1,47 @@
-# Copyright (c) Streamlit Inc. (2018-2022) Snowflake Inc. (2022)
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 import streamlit as st
-from streamlit.logger import get_logger
+import librosa
+import numpy as np
+import pickle
+from tensorflow.keras.models import load_model
+import joblib
+import resampy
 
-LOGGER = get_logger(__name__)
+# Load the label encoder
+labelencoder = joblib.load('labelencoder.pkl')
 
+# Load the model from the SavedModel format
+#loaded_model = tf.saved_model.load(r'C:\Users\prasa\OneDrive\Desktop\DSA hackathons\AUdio DL\saved_models\audio_classification.hdf5')
 
-def run():
-    st.set_page_config(
-        page_title="Hello",
-        page_icon="👋",
-    )
+model = load_model('audio_classification.hdf5')
+# Function to preprocess audio file
+def preprocess_audio(filename):
+    audio, sample_rate = librosa.load(filename, res_type='kaiser_fast') 
+    mfccs_features = librosa.feature.mfcc(y=audio, sr=sample_rate, n_mfcc=40)
+    mfccs_scaled_features = np.mean(mfccs_features.T, axis=0)
+    return mfccs_scaled_features.reshape(1, -1)
 
-    st.write("# Welcome to Streamlit! 👋")
+# Define Streamlit app
+def main():
+    st.title('Audio Classification')
 
-    st.sidebar.success("Select a demo above.")
+    uploaded_file = st.file_uploader("Upload an audio file", type=['wav'])
 
-    st.markdown(
-        """
-        Streamlit is an open-source app framework built specifically for
-        Machine Learning and Data Science projects.
-        **👈 Select a demo from the sidebar** to see some examples
-        of what Streamlit can do!
-        ### Want to learn more?
-        - Check out [streamlit.io](https://streamlit.io)
-        - Jump into our [documentation](https://docs.streamlit.io)
-        - Ask a question in our [community
-          forums](https://discuss.streamlit.io)
-        ### See more complex demos
-        - Use a neural net to [analyze the Udacity Self-driving Car Image
-          Dataset](https://github.com/streamlit/demo-self-driving)
-        - Explore a [New York City rideshare dataset](https://github.com/streamlit/demo-uber-nyc-pickups)
-    """
-    )
+    if uploaded_file is not None:
+        st.audio(uploaded_file, format='audio/wav')
 
+        if st.button('Classify'):
+            # Preprocess the uploaded file
+            preprocessed_features = preprocess_audio(uploaded_file)
 
-if __name__ == "__main__":
-    run()
+            # Apply the model to classify the audio file
+            predicted_label = model.predict(preprocessed_features)
+
+            # Convert predicted label to class
+            predicted_class_index = np.argmax(predicted_label)
+            prediction_class = labelencoder.inverse_transform(predicted_class_index.reshape(1, -1))
+
+            st.write("Predicted class:", prediction_class)
+
+# Run the Streamlit app
+if __name__ == '__main__':
+    main()
