@@ -4,7 +4,7 @@ import numpy as np
 import pickle
 from tensorflow.keras.models import load_model
 import joblib
-import resampy
+
 
 # Load the label encoder
 labelencoder = joblib.load('labelencoder.pkl')
@@ -14,11 +14,21 @@ labelencoder = joblib.load('labelencoder.pkl')
 
 model = load_model('audio_classification.hdf5')
 # Function to preprocess audio file
-def preprocess_audio(filename):
-    audio, sample_rate = librosa.load(filename, res_type='kaiser_fast') 
+
+
+def preprocess_audio(uploaded_file):
+    # Convert the uploaded file to an array
+    audio, sample_rate = librosa.load(uploaded_file, sr=None)
+
+    # Extract MFCC features
     mfccs_features = librosa.feature.mfcc(y=audio, sr=sample_rate, n_mfcc=40)
+
+    # Compute the mean of MFCC features
     mfccs_scaled_features = np.mean(mfccs_features.T, axis=0)
+
+    # Reshape features to be a 2-dimensional array with a single row
     return mfccs_scaled_features.reshape(1, -1)
+
 
 # Define Streamlit app
 def main():
