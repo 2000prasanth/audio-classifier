@@ -1,7 +1,10 @@
-# Welcome to streamlit
+# Audio Classifier
 
-This is the app you get when you run `streamlit hello`, extracted as its own app.
+## Overview
+This repository contains the source code for an audio classifier. The classifier uses machine learning techniques to identify and categorize different sounds.
 
-Edit [Hello.py](./Hello.py) to customize this app to your heart's desire. ❤️
-
-Check it out on [Streamlit Community Cloud](https://st-hello-app.streamlit.app/)
+## Features
+- **Audio Processing**: Converts raw audio files into a suitable format for analysis.
+- **Feature Extraction**: Extracts relevant features from the processed audio data.
+- **Classification Model**: Trains a model to classify different types of audio.
+- **Evaluation**: Evaluates the performance of the model and provides metrics.
